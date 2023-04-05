@@ -25,6 +25,7 @@ const errorHandlerMiddleware = require("./middleware/error-handler");
 const connectDB = require("./db/connect");
 
 // router config
+const authRouter = require("./routes/authRoutes");
 
 // middleware config
 app.set("trust proxy", 1);
@@ -50,6 +51,8 @@ app.get("/api/v1", (req, res) => {
 });
 
 // routes
+app.use("/api/v1/auth", authRouter);
+
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
