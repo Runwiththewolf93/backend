@@ -54,4 +54,4 @@ const login = async (req, res) => {
 
 module.exports = { register, login };
 
-// open john smilga react project, mern jobify, e-commerce starter-cookies
+// open john smilga react project, mern jobify, e-commerce starter-cookies, e-commerce brad traversy
