@@ -38,6 +38,7 @@ const BlogSchema = mongoose.Schema(
         default: "/public/uploads/example.jpeg",
       },
     ],
+    user: { type: mongoose.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }
 );
