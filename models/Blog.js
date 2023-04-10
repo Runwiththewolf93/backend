@@ -14,7 +14,7 @@ const BlogSchema = mongoose.Schema(
     avatar: {
       type: String,
       required: true,
-      default: "/public/uploads/couch.png",
+      default: "/public/uploads/Portrait_Placeholder.png",
     },
     content: {
       type: String,
@@ -25,17 +25,17 @@ const BlogSchema = mongoose.Schema(
       {
         type: String,
         required: true,
-        default: "/public/uploads/example.jpeg",
+        default: "/public/uploads/Images_Placeholder.png",
       },
       {
         type: String,
         required: true,
-        default: "/public/uploads/example.jpeg",
+        default: "/public/uploads/Images_Placeholder.png",
       },
       {
         type: String,
         required: true,
-        default: "/public/uploads/example.jpeg",
+        default: "/public/uploads/Images_Placeholder.png",
       },
     ],
     user: { type: mongoose.Types.ObjectId, ref: "User", required: true },
