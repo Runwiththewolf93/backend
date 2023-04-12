@@ -31,7 +31,7 @@ const createBlogPost = async (req, res) => {
   }
 
   const { title, avatar, content, images } = value;
-  const user = req.user.userId;
+  const user = req.user.id;
 
   const blogPost = await Blog.create({ title, avatar, content, images, user });
 

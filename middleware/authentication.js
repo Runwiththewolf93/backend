@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const CustomError = require("../errors");
+const User = require("../models/User");
 
 const authentication = async (req, _, next) => {
   let token;
@@ -11,11 +12,14 @@ const authentication = async (req, _, next) => {
     );
   }
 
-  token = authHeader.split(" ")[1];
-
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { userId: payload.userId };
+    // Get token from auth header
+    token = authHeader.split(" ")[1];
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Get user from token
+    req.user = await User.findById(decoded.id).select("-password");
+
     next();
   } catch (error) {
     throw new CustomError.UnauthenticatedError(
