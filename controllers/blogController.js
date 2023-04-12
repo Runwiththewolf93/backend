@@ -3,6 +3,9 @@ const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 const Joi = require("joi");
 
+// @desc Fetch all blog posts
+// @route GET /api/v1/blog
+// @access Private
 const getAllBlogPosts = async (req, res) => {
   const blogPosts = await Blog.find({})
     .populate("user", "name email")
@@ -11,6 +14,9 @@ const getAllBlogPosts = async (req, res) => {
   res.status(StatusCodes.OK).json(blogPosts);
 };
 
+// @desc Create new blog post
+// @route POST /api/v1/blog
+// @access Private
 const createBlogPost = async (req, res) => {
   const schema = Joi.object({
     title: Joi.string().required().max(100),
@@ -32,6 +38,9 @@ const createBlogPost = async (req, res) => {
   res.status(StatusCodes.CREATED).json(blogPost);
 };
 
+// @desc Get single blog post
+// @route GET /api/v1/blog/:id
+// @access Private
 const getSingleBlogPost = async (req, res) => {
   const { id } = req.params;
 
@@ -43,6 +52,9 @@ const getSingleBlogPost = async (req, res) => {
   res.status(StatusCodes.OK).json(blogPost);
 };
 
+// @desc Update existing blog post
+// @route PATCH /api/v1/blog/:id
+// @access Private
 const updateBlogPost = async (req, res) => {
   const { id } = req.params;
 
@@ -74,6 +86,9 @@ const updateBlogPost = async (req, res) => {
   res.status(StatusCodes.OK).json(updatedBlogPost);
 };
 
+// @desc Delete existing blog post
+// @route DELETE /api/v1/blog/:id
+// @access Private
 const deleteBlogPost = async (req, res) => {
   const { id } = req.params;
 

@@ -30,7 +30,8 @@ const blogRouter = require("./routes/blogRoutes");
 
 // middleware config
 app.set("trust proxy", 1);
-app.use(rateLimiter({ windowMs: 15 * 60 * 1000, max: 60 }));
+// turn back on after development finished
+// app.use(rateLimiter({ windowMs: 15 * 60 * 1000, max: 60 }));
 app.use(helmet());
 app.use(cors());
 app.use(xss());

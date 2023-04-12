@@ -2,6 +2,9 @@ const User = require("../models/User");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 
+// @desc Register a new user
+// @route POST /api/v1/auth
+// @access Public
 const register = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -26,6 +29,9 @@ const register = async (req, res) => {
   });
 };
 
+// @desc Login an existing user
+// @route POST /api/v1/auth
+// @access Public
 const login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
