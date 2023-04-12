@@ -70,6 +70,18 @@ const updateBlogPost = async (req, res) => {
     throw new CustomError.BadRequestError(error.details[0].message);
   }
 
+  const blogPost = await Blog.findById(id).populate("user", "name email");
+
+  if (!blogPost) {
+    throw new CustomError.NotFoundError(`No product with id : ${id}`);
+  }
+
+  if (req.user.id !== blogPost.user.id) {
+    throw new CustomError.UnauthorizedError(
+      "You are not authorized to modify this blog post"
+    );
+  }
+
   const updatedBlogPost = await Blog.findByIdAndUpdate(
     { _id: id },
     { $set: value },
@@ -78,10 +90,6 @@ const updateBlogPost = async (req, res) => {
       runValidators: true,
     }
   ).populate("user", "name email");
-
-  if (!updatedBlogPost) {
-    throw new CustomError.NotFoundError(`No product with id : ${id}`);
-  }
 
   res.status(StatusCodes.OK).json(updatedBlogPost);
 };
@@ -92,11 +100,19 @@ const updateBlogPost = async (req, res) => {
 const deleteBlogPost = async (req, res) => {
   const { id } = req.params;
 
-  const deletedBlogPost = await Blog.findByIdAndDelete({ _id: id });
+  const blogPost = await Blog.findById(id);
 
-  if (!deletedBlogPost) {
+  if (!blogPost) {
     throw new CustomError.NotFoundError(`No blog post with id : ${id}`);
   }
+
+  if (req.user.id !== blogPost.user.toString()) {
+    throw new CustomError.UnauthorizedError(
+      "You are not authorized to delete this blog post"
+    );
+  }
+
+  await Blog.findByIdAndDelete({ _id: id });
 
   res.status(StatusCodes.OK).json({
     message: `Blog post with id ${id} has been deleted successfully.`,
