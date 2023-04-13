@@ -27,6 +27,7 @@ const connectDB = require("./db/connect");
 // router config
 const authRouter = require("./routes/authRoutes");
 const blogRouter = require("./routes/blogRoutes");
+const commentRouter = require("./routes/commentRoutes");
 
 // middleware config
 app.set("trust proxy", 1);
@@ -55,6 +56,7 @@ app.get("/api/v1", (req, res) => {
 // routes
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/blog", blogRouter);
+app.use("/api/v1/comment", commentRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);

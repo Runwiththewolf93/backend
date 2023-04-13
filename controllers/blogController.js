@@ -40,7 +40,7 @@ const createBlogPost = async (req, res) => {
 
 // @desc Get single blog post
 // @route GET /api/v1/blog/:id
-// @access Private
+// @access Public
 const getSingleBlogPost = async (req, res) => {
   const { id } = req.params;
 
