@@ -8,18 +8,21 @@ const {
 } = require("../middleware/extraction");
 const {
   getAllCommentsBlogPost,
+  getAllCommentsUser,
   createCommentBlogPost,
   updateCommentBlogPost,
   deleteCommentBlogPost,
 } = require("../controllers/commentController");
 
 router
-  .route("/:blogId")
+  .route("blogId/:blogId")
   .get(authentication, blogIdExtraction, getAllCommentsBlogPost)
   .post(authentication, blogIdExtraction, createCommentBlogPost);
 
+router.route("/user").get(authentication, getAllCommentsUser);
+
 router
-  .route("/:blogId/:commentId")
+  .route("/blogId/:blogId/commentId/:commentId")
   .put(
     authentication,
     blogIdExtraction,
