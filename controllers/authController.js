@@ -3,7 +3,7 @@ const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 
 // @desc Register a new user
-// @route POST /api/v1/auth
+// @route POST /api/v1/auth/register
 // @access Public
 const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -30,7 +30,7 @@ const register = async (req, res) => {
 };
 
 // @desc Login an existing user
-// @route POST /api/v1/auth
+// @route POST /api/v1/auth/login
 // @access Public
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -59,5 +59,3 @@ const login = async (req, res) => {
 };
 
 module.exports = { register, login };
-
-// open john smilga react project, mern jobify, e-commerce starter-cookies, e-commerce brad traversy
