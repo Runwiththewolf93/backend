@@ -9,17 +9,20 @@ const {
 const {
   getAllCommentsBlogPost,
   getAllCommentsUser,
+  getAllComments,
   createCommentBlogPost,
   updateCommentBlogPost,
   deleteCommentBlogPost,
 } = require("../controllers/commentController");
 
-router
-  .route("blogId/:blogId")
-  .get(authentication, blogIdExtraction, getAllCommentsBlogPost)
-  .post(authentication, blogIdExtraction, createCommentBlogPost);
+router.route("/").get(authentication, getAllComments);
 
 router.route("/user").get(authentication, getAllCommentsUser);
+
+router
+  .route("/blogId/:blogId")
+  .get(authentication, blogIdExtraction, getAllCommentsBlogPost)
+  .post(authentication, blogIdExtraction, createCommentBlogPost);
 
 router
   .route("/blogId/:blogId/commentId/:commentId")

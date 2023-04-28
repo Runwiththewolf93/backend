@@ -40,6 +40,19 @@ const getAllCommentsUser = async (req, res) => {
   res.status(StatusCodes.OK).json(comments);
 };
 
+// @desc Get all comments for all blog posts
+// @route GET /api/v1/comment/
+// @access Private
+const getAllComments = async (_, res) => {
+  const comments = await Comment.find().populate("user", "name email");
+
+  if (!comments) {
+    throw new CustomError.NotFoundError("No comments found");
+  }
+
+  res.status(StatusCodes.OK).json(comments);
+};
+
 // @desc Create a comment for a single blog post
 // @route POST /api/v1/comment/blogId/:blogId
 // @access Private
@@ -110,6 +123,7 @@ const deleteCommentBlogPost = async (req, res) => {
 module.exports = {
   getAllCommentsBlogPost,
   getAllCommentsUser,
+  getAllComments,
   createCommentBlogPost,
   updateCommentBlogPost,
   deleteCommentBlogPost,
