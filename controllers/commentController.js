@@ -80,12 +80,12 @@ const createCommentBlogPost = async (req, res) => {
 // @access Private
 const updateCommentBlogPost = async (req, res) => {
   const { blogId, commentId } = req;
-  const { comment } = req.body;
+  const { editedComment } = req.body;
   const userId = req.user._id;
 
   const updatedComment = await Comment.findOneAndUpdate(
     { _id: commentId, blog: blogId, user: userId },
-    { comment },
+    { comment: editedComment },
     { new: true }
   );
 

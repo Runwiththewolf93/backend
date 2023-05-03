@@ -26,7 +26,7 @@ router
 
 router
   .route("/blogId/:blogId/commentId/:commentId")
-  .put(
+  .patch(
     authentication,
     blogIdExtraction,
     commentIdExtraction,
