@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const authenticateUser = require("../middleware/authentication");
+const { authentication } = require("../middleware/authentication");
 const {
   getAllBlogPosts,
   createBlogPost,
@@ -11,13 +11,13 @@ const {
 
 router
   .route("/")
-  .get(authenticateUser, getAllBlogPosts)
-  .post(authenticateUser, createBlogPost);
+  .get(authentication, getAllBlogPosts)
+  .post(authentication, createBlogPost);
 
 router
   .route("/:id")
   .get(getSingleBlogPost)
-  .patch(authenticateUser, updateBlogPost)
-  .delete(authenticateUser, deleteBlogPost);
+  .patch(authentication, updateBlogPost)
+  .delete(authentication, deleteBlogPost);
 
 module.exports = router;

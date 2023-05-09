@@ -48,10 +48,6 @@ app.use(express.static("./public"));
 app.get("/", (req, res) => {
   res.send("<h1>Welcome to my blog app!</h1>");
 });
-app.get("/api/v1", (req, res) => {
-  console.log(req.signedCookies);
-  res.send("<h1>Welcome to my blog app!</h1>");
-});
 
 // routes
 app.use("/api/v1/auth", authRouter);

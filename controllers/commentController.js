@@ -120,6 +120,25 @@ const deleteCommentBlogPost = async (req, res) => {
   res.status(StatusCodes.OK).json(deletedComment);
 };
 
+// @desc Delete all comments for a single blog post
+// @route DELETE /api/v1/comment/blogId/:blogId
+// @access Private
+const deleteAllCommentsBlogPost = async (req, res) => {
+  const { blogId } = req;
+
+  const deletedComments = await Comment.deleteMany({
+    blog: blogId,
+  });
+
+  if (deletedComments.deletedCount === 0) {
+    throw new CustomError.NotFoundError(
+      `No comments found for blog post with id : ${blogId}`
+    );
+  }
+
+  res.status(StatusCodes.OK).json(deletedComments);
+};
+
 module.exports = {
   getAllCommentsBlogPost,
   getAllCommentsUser,
@@ -127,4 +146,5 @@ module.exports = {
   createCommentBlogPost,
   updateCommentBlogPost,
   deleteCommentBlogPost,
+  deleteAllCommentsBlogPost,
 };

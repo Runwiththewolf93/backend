@@ -6,9 +6,9 @@ const jwt = require("jsonwebtoken");
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, "Please provide a valid username"],
-    minLength: 3,
-    maxLength: 50,
+    required: [true, "Please provide a valid full name"],
+    trim: true,
+    match: [/^[A-Z][a-z]*\s[A-Z][a-z]*$/, "Please provide a valid full name"],
   },
   email: {
     type: String,
@@ -22,6 +22,11 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please provide a valid password"],
     minLength: 6,
+  },
+  isAdmin: {
+    type: Boolean,
+    required: true,
+    default: false,
   },
 });
 

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const authentication = require("../middleware/authentication");
+const { authentication } = require("../middleware/authentication");
 const {
   blogIdExtraction,
   commentIdExtraction,
@@ -13,6 +13,7 @@ const {
   createCommentBlogPost,
   updateCommentBlogPost,
   deleteCommentBlogPost,
+  deleteAllCommentsBlogPost,
 } = require("../controllers/commentController");
 
 router.route("/").get(authentication, getAllComments);
@@ -22,7 +23,8 @@ router.route("/user").get(authentication, getAllCommentsUser);
 router
   .route("/blogId/:blogId")
   .get(authentication, blogIdExtraction, getAllCommentsBlogPost)
-  .post(authentication, blogIdExtraction, createCommentBlogPost);
+  .post(authentication, blogIdExtraction, createCommentBlogPost)
+  .delete(authentication, blogIdExtraction, deleteAllCommentsBlogPost);
 
 router
   .route("/blogId/:blogId/commentId/:commentId")

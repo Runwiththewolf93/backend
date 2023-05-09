@@ -25,6 +25,7 @@ const register = async (req, res) => {
     _id: user._id,
     name: user.name,
     email: user.email,
+    isAdmin: user.isAdmin,
     token,
   });
 };
@@ -54,8 +55,17 @@ const login = async (req, res) => {
     _id: user._id,
     name: user.name,
     email: user.email,
+    isAdmin: user.isAdmin,
     token,
   });
 };
 
-module.exports = { register, login };
+// @desc Get all users
+// @route GET /api/v1/users
+// access Private
+const getAllUsers = async (_, res) => {
+  const users = await User.find({});
+  res.status(StatusCodes.OK).json(users);
+};
+
+module.exports = { register, login, getAllUsers };

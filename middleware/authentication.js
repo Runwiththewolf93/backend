@@ -34,4 +34,12 @@ const authentication = async (req, _, next) => {
   }
 };
 
-module.exports = authentication;
+const authorization = async (req, _, next) => {
+  if (req.user && req.user.isAdmin) {
+    next();
+  } else {
+    throw new CustomError.UnauthorizedError("Not authorized as an admin");
+  }
+};
+
+module.exports = { authentication, authorization };
