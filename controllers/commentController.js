@@ -44,7 +44,9 @@ const getAllCommentsUser = async (req, res) => {
 // @route GET /api/v1/comment/
 // @access Private
 const getAllComments = async (_, res) => {
-  const comments = await Comment.find().populate("user", "name email");
+  const comments = await Comment.find()
+    .populate("user", "name email")
+    .sort("createdAt");
 
   if (!comments) {
     throw new CustomError.NotFoundError("No comments found");

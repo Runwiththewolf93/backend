@@ -9,6 +9,7 @@ const CommentSchema = mongoose.Schema(
     },
     user: { type: mongoose.Types.ObjectId, ref: "User", required: true },
     blog: { type: mongoose.Types.ObjectId, ref: "Blog", required: true },
+    totalVotes: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

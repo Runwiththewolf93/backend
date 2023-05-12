@@ -39,6 +39,7 @@ const BlogSchema = mongoose.Schema(
       },
     ],
     user: { type: mongoose.Types.ObjectId, ref: "User", required: true },
+    totalVotes: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
