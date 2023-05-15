@@ -8,9 +8,7 @@ const CustomError = require("../errors");
 //@route GET /api/v1/vote
 //@access Private
 const getAllVotes = async (req, res) => {
-  const votes = await Vote.find({})
-    .populate("user", "name email")
-    .sort("createdAt");
+  const votes = await Vote.find({});
 
   res.status(StatusCodes.OK).json(votes);
 };

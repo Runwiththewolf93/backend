@@ -44,7 +44,8 @@ const createBlogPost = async (req, res) => {
 const getSingleBlogPost = async (req, res) => {
   const { id } = req.params;
 
-  const blogPost = await Blog.findById(id);
+  const blogPost = await Blog.findById(id).populate("user", "name email");
+
   if (!blogPost) {
     throw new CustomError.NotFoundError(`No blog post with id : ${id}`);
   }
