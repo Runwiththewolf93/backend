@@ -157,11 +157,15 @@ const deleteBlogVoteCount = async (req, res) => {
     }
 
     await blogPost.save();
+
+    // Keep a copy of the vote to return before deleting
+    const voteToDelete = existingVote;
     await existingVote.deleteOne();
 
     return res.status(StatusCodes.OK).json({
       msg: "Vote deleted",
       totalVotes: blogPost.totalVotes,
+      vote: voteToDelete,
     });
   }
 };
@@ -193,11 +197,15 @@ const deleteCommentVoteCount = async (req, res) => {
     }
 
     await comment.save();
+
+    // Keep a copy of the vote to return before deleting
+    const voteToDelete = existingVote;
     await existingVote.deleteOne();
 
     return res.status(StatusCodes.OK).json({
       msg: "Vote deleted",
       totalVotes: comment.totalVotes,
+      vote: voteToDelete,
     });
   }
 };
