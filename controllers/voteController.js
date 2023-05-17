@@ -210,10 +210,27 @@ const deleteCommentVoteCount = async (req, res) => {
   }
 };
 
+// @desc Delete vote count for all comments of a blog post
+// @route DELETE /api/v1/vote/blogId/:blogId/comments
+// @access Private
+const deleteAllCommentVotesForBlog = async (req, res) => {
+  const { blogId } = req;
+
+  // Find all comments for the blog post
+  const comments = await Comment.find({ blog: blogId });
+  const commentIds = comments.map(comment => comment._id);
+
+  // Delete all votes where the post field is in commentIds
+  await Vote.deleteMany({ post: { $in: commentIds } });
+
+  res.status(StatusCodes.OK).json({ msg: "All comment votes deleted" });
+};
+
 module.exports = {
   getAllVotes,
   updateBlogVoteCount,
   updateCommentVoteCount,
   deleteBlogVoteCount,
   deleteCommentVoteCount,
+  deleteAllCommentVotesForBlog,
 };
