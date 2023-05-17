@@ -19,14 +19,13 @@ const getAllVotes = async (req, res) => {
 const updateBlogVoteCount = async (req, res) => {
   const { blogId } = req;
   const userId = req.user._id;
-  const blogPost = await Blog.findById(blogId);
 
+  const blogPost = await Blog.findById(blogId);
   if (!blogPost) {
     throw new CustomError.NotFoundError(`No blog post with id ${blogId}`);
   }
 
   const vote = Number(req.query.vote);
-
   // check if vote is valid
   if (![1, 0, -1].includes(vote)) {
     throw new CustomError.BadRequestError("Invalid vote type");
@@ -72,7 +71,7 @@ const updateBlogVoteCount = async (req, res) => {
 };
 
 // @desc Update vote count for comment
-// @route POST /api/v1/vote/blogId/:blogId/commentId/:commentId
+// @route POST /api/v1/vote/commentId/:commentId
 // @access Private
 const updateCommentVoteCount = async (req, res) => {
   const { commentId } = req;
@@ -129,8 +128,84 @@ const updateCommentVoteCount = async (req, res) => {
   }
 };
 
+// @desc Delete vote count for blog post
+// @route DELETE /api/v1/vote/blogId/:blogId
+// @access Private
+const deleteBlogVoteCount = async (req, res) => {
+  const { blogId } = req;
+  const userId = req.user._id;
+
+  const blogPost = await Blog.findById(blogId);
+  if (!blogPost) {
+    throw new CustomError.NotFoundError(`No blog post with id ${blogId}`);
+  }
+
+  const existingVote = await Vote.findOne({ user: userId, post: blogId });
+
+  if (!existingVote) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "Vote does not exist" });
+  } else {
+    const oldVote = existingVote.vote;
+
+    // Subtract the user's vote from the blog's totalVotes
+    if (oldVote === 1) {
+      blogPost.totalVotes -= 1;
+    } else if (oldVote === -1) {
+      blogPost.totalVotes += 1;
+    }
+
+    await blogPost.save();
+    await existingVote.deleteOne();
+
+    return res.status(StatusCodes.OK).json({
+      msg: "Vote deleted",
+      totalVotes: blogPost.totalVotes,
+    });
+  }
+};
+
+// @desc Delete vote count for comment
+// @route DELETE /api/v1/vote/commentId/:commentId
+// @access Private
+const deleteCommentVoteCount = async (req, res) => {
+  const { commentId } = req;
+  const userId = req.user._id;
+
+  const comment = await Comment.findById(commentId);
+  if (!comment) {
+    throw new CustomError.NotFoundError(`No comment with id ${commentId}`);
+  }
+
+  const existingVote = await Vote.findOne({ user: userId, post: commentId });
+
+  if (!existingVote) {
+    res.status(StatusCodes.BAD_REQUEST).json({ msg: "Vote does not exist" });
+  } else {
+    const oldVote = existingVote.vote;
+
+    // Subtract the user's vote from the comment's totalVotes
+    if (oldVote === 1) {
+      comment.totalVotes -= 1;
+    } else if (oldVote === -1) {
+      comment.totalVotes += 1;
+    }
+
+    await comment.save();
+    await existingVote.deleteOne();
+
+    return res.status(StatusCodes.OK).json({
+      msg: "Vote deleted",
+      totalVotes: comment.totalVotes,
+    });
+  }
+};
+
 module.exports = {
   getAllVotes,
   updateBlogVoteCount,
   updateCommentVoteCount,
+  deleteBlogVoteCount,
+  deleteCommentVoteCount,
 };
