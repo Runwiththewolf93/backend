@@ -132,10 +132,11 @@ const deleteAllCommentsBlogPost = async (req, res) => {
     blog: blogId,
   });
 
+  // Instead of throwing an error, we return a message
   if (deletedComments.deletedCount === 0) {
-    throw new CustomError.NotFoundError(
-      `No comments found for blog post with id : ${blogId}`
-    );
+    return res
+      .status(StatusCodes.OK)
+      .json({ msg: `No comments found for blog post with id : ${blogId}` });
   }
 
   res.status(StatusCodes.OK).json(deletedComments);
