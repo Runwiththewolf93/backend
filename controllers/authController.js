@@ -60,6 +60,48 @@ const login = async (req, res) => {
   });
 };
 
+// @desc Update a user
+// @route PUT /api/v1/auth/update/:userId
+// @access Private / Admin
+const updateUser = async (req, res) => {
+  const { name, email, isAdmin } = req.body;
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new CustomError.NotFoundError("User not found");
+  }
+
+  user.name = name || user.name;
+  user.email = email || user.email;
+  user.isAdmin = isAdmin !== undefined ? isAdmin : user.isAdmin;
+
+  await user.save();
+
+  res.status(StatusCodes.OK).json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    isAdmin: user.isAdmin,
+  });
+};
+
+// @desc Delete a user
+// @route DELETE /api/v1/auth/delete/:userId
+// @access Private / Admin
+const deleteUser = async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new CustomError.NotFoundError("User not found");
+  }
+
+  await user.deleteOne();
+
+  res.status(StatusCodes.OK).json({ msg: "User deleted successfully" });
+};
+
 // @desc Get all users
 // @route GET /api/v1/users
 // access Private
@@ -68,4 +110,4 @@ const getAllUsers = async (_, res) => {
   res.status(StatusCodes.OK).json(users);
 };
 
-module.exports = { register, login, getAllUsers };
+module.exports = { register, login, getAllUsers, updateUser, deleteUser };
