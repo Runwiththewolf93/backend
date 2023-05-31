@@ -26,6 +26,7 @@ const updateBlogVoteCount = async (req, res) => {
   }
 
   const vote = Number(req.query.vote);
+
   // check if vote is valid
   if (![1, 0, -1].includes(vote)) {
     throw new CustomError.BadRequestError("Invalid vote type");
@@ -76,8 +77,8 @@ const updateBlogVoteCount = async (req, res) => {
 const updateCommentVoteCount = async (req, res) => {
   const { commentId } = req;
   const userId = req.user._id;
-  const comment = await Comment.findById(commentId);
 
+  const comment = await Comment.findById(commentId);
   if (!comment) {
     throw new CustomError.NotFoundError(`No comment with id ${commentId}`);
   }

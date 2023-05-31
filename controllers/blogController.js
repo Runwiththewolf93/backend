@@ -20,8 +20,8 @@ const getAllBlogPosts = async (req, res) => {
 const createBlogPost = async (req, res) => {
   const createSchema = Joi.object({
     title: Joi.string().required(),
-    content: Joi.string().required(),
     avatar: Joi.string(),
+    content: Joi.string().required(),
     images: Joi.array().items(Joi.string()).length(3),
   });
 
@@ -30,12 +30,8 @@ const createBlogPost = async (req, res) => {
     throw new CustomError.BadRequestError(error.details[0].message);
   }
 
-  const { title, content, avatar: avatarUrl, images: imagesUrl } = value;
+  const { title, avatar: avatarUrl, content, images: imagesUrl } = value;
   const user = req.user.id;
-
-  if (!title || !content) {
-    throw new CustomError.BadRequestError("Please provide all values");
-  }
 
   const avatar =
     req.files && req.files["avatar"] && req.files["avatar"][0]
@@ -47,7 +43,7 @@ const createBlogPost = async (req, res) => {
       ? req.files["images"].map(image => image.path)
       : imagesUrl;
 
-  const blogPost = await Blog.create({ title, avatar, content, images, user });
+  const blogPost = await Blog.create({ user, title, avatar, content, images });
 
   res.status(StatusCodes.CREATED).json(blogPost);
 };
@@ -56,7 +52,15 @@ const createBlogPost = async (req, res) => {
 // @route GET /api/v1/blog/:id
 // @access Public
 const getSingleBlogPost = async (req, res) => {
-  const { id } = req.params;
+  const { error, value } = Joi.object({
+    id: Joi.string().length(24).hex().required(),
+  }).validate(req.params);
+
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { id } = value;
 
   const blogPost = await Blog.findById(id).populate("user", "name email");
 
@@ -113,7 +117,15 @@ const updateBlogPost = async (req, res) => {
 // @route DELETE /api/v1/blog/:id
 // @access Private
 const deleteBlogPost = async (req, res) => {
-  const { id } = req.params;
+  const { error, value } = Joi.object({
+    id: Joi.string().length(24).hex().required(),
+  }).validate(req.params);
+
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { id } = value;
 
   const blogPost = await Blog.findById(id);
 

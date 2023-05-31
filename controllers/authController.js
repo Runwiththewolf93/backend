@@ -1,16 +1,25 @@
 const User = require("../models/User");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
+const Joi = require("joi");
 
 // @desc Register a new user
 // @route POST /api/v1/auth/register
 // @access Public
 const register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const registerSchema = Joi.object({
+    name: Joi.string().required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).required(),
+  });
 
-  if (!name || !email || !password) {
-    throw new CustomError.BadRequestError("Please provide all values");
+  const { error, value } = registerSchema.validate(req.body);
+
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
   }
+
+  const { name, email, password } = value;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
@@ -34,7 +43,19 @@ const register = async (req, res) => {
 // @route POST /api/v1/auth/login
 // @access Public
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const loginSchema = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().required(),
+  });
+
+  const { error, value } = loginSchema.validate(req.body);
+
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { email, password } = value;
+
   if (!email || !password) {
     throw new CustomError.BadRequestError("Please provide all values");
   }
@@ -72,13 +93,25 @@ const getAllUsers = async (_, res) => {
 // @route PUT /api/v1/auth/update/:userId
 // @access Private / Admin
 const updateUser = async (req, res) => {
-  const { name, email, isAdmin } = req.body;
   const { userId } = req.params;
 
   const user = await User.findById(userId);
   if (!user) {
     throw new CustomError.NotFoundError("User not found");
   }
+
+  const updateSchema = Joi.object({
+    name: Joi.string(),
+    email: Joi.string().email(),
+    isAdmin: Joi.boolean(),
+  });
+
+  const { error, value } = updateSchema.validate(req.body);
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { name, email, isAdmin } = value;
 
   user.name = name || user.name;
   user.email = email || user.email;
@@ -98,7 +131,16 @@ const updateUser = async (req, res) => {
 // @route DELETE /api/v1/auth/delete/:userId
 // @access Private / Admin
 const deleteUser = async (req, res) => {
-  const { userId } = req.params;
+  const paramsSchema = Joi.object({
+    userId: Joi.string().required(),
+  });
+
+  const { error, value } = paramsSchema.validate(req.params);
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { userId } = value;
 
   const user = await User.findById(userId);
   if (!user) {
@@ -114,11 +156,17 @@ const deleteUser = async (req, res) => {
 // @route PATCH /api/v1/auth/updateUserPassword
 // @access Private
 const updateUserPassword = async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
+  const bodySchema = Joi.object({
+    currentPassword: Joi.string().required(),
+    newPassword: Joi.string().required(),
+  });
 
-  if (!currentPassword || !newPassword) {
-    throw new CustomError.BadRequestError("Please provide all values");
+  const { error, value } = bodySchema.validate(req.body);
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
   }
+
+  const { currentPassword, newPassword } = value;
 
   const user = await User.findById(req.user._id);
   if (!user) {

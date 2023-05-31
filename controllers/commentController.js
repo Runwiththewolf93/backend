@@ -1,12 +1,22 @@
 const Comment = require("../models/Comment");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
+const Joi = require("joi");
 
 // @desc Get all comments for a single blog post
 // @route GET /api/v1/comment/blogId/:blogId
 // @access Private
 const getAllCommentsBlogPost = async (req, res) => {
-  const { blogId } = req;
+  const paramsSchema = Joi.object({
+    blogId: Joi.string().required(),
+  });
+
+  const { error, value } = paramsSchema.validate(req.params);
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { blogId } = value;
 
   const comments = await Comment.find({ blog: blogId }).populate(
     "user",
@@ -25,7 +35,16 @@ const getAllCommentsBlogPost = async (req, res) => {
 // @route GET /api/v1/comment/user
 // @access Private
 const getAllCommentsUser = async (req, res) => {
-  const { user } = req;
+  const schema = Joi.object({
+    user: Joi.object().required(),
+  });
+
+  const { error, value } = schema.validate(req, { allowUnknown: true });
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { user } = value;
 
   const comments = await Comment.find({ user: user._id }).populate(
     "blog",
@@ -59,8 +78,17 @@ const getAllComments = async (_, res) => {
 // @route POST /api/v1/comment/blogId/:blogId
 // @access Private
 const createCommentBlogPost = async (req, res) => {
+  const schema = Joi.object({
+    comment: Joi.string().required(),
+  });
+
+  const { error, value } = schema.validate(req.body);
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { comment } = value;
   const { blogId } = req;
-  const { comment } = req.body;
   const userId = req.user._id;
 
   const newComment = await Comment.create({
@@ -81,8 +109,17 @@ const createCommentBlogPost = async (req, res) => {
 // @route PUT /api/v1/comment/blogId/:blogId/commentId/:commentId
 // @access Private
 const updateCommentBlogPost = async (req, res) => {
+  const schema = Joi.object({
+    editedComment: Joi.string().required(),
+  });
+
+  const { error, value } = schema.validate(req.body);
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { editedComment } = value;
   const { blogId, commentId } = req;
-  const { editedComment } = req.body;
   const userId = req.user._id;
 
   const updatedComment = await Comment.findOneAndUpdate(
