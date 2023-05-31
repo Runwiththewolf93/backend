@@ -25,7 +25,14 @@ router
 router
   .route("/:id")
   .get(getSingleBlogPost)
-  .patch(authentication, updateBlogPost)
+  .patch(
+    authentication,
+    upload.fields([
+      { name: "avatar", maxCount: 1 },
+      { name: "images", maxCount: 3 },
+    ]),
+    updateBlogPost
+  )
   .delete(authentication, deleteBlogPost);
 
 module.exports = router;
