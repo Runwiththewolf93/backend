@@ -18,20 +18,34 @@ const getAllBlogPosts = async (req, res) => {
 // @route POST /api/v1/blog
 // @access Private
 const createBlogPost = async (req, res) => {
-  const schema = Joi.object({
-    title: Joi.string().required().max(100),
-    avatar: Joi.string().required(),
-    content: Joi.string().required().max(1000),
-    images: Joi.array().items(Joi.string().required()).length(3).required(),
+  const createSchema = Joi.object({
+    title: Joi.string().required(),
+    content: Joi.string().required(),
+    avatar: Joi.string(),
+    images: Joi.array().items(Joi.string()).length(3),
   });
-  const { error, value } = schema.validate(req.body);
 
+  const { error, value } = createSchema.validate(req.body);
   if (error) {
     throw new CustomError.BadRequestError(error.details[0].message);
   }
 
-  const { title, avatar, content, images } = value;
+  const { title, content, avatar: avatarUrl, images: imagesUrl } = value;
   const user = req.user.id;
+
+  if (!title || !content) {
+    throw new CustomError.BadRequestError("Please provide all values");
+  }
+
+  const avatar =
+    req.files && req.files["avatar"] && req.files["avatar"][0]
+      ? req.files["avatar"][0].path
+      : avatarUrl;
+
+  let images =
+    req.files && req.files["images"]
+      ? req.files["images"].map(image => image.path)
+      : imagesUrl;
 
   const blogPost = await Blog.create({ title, avatar, content, images, user });
 

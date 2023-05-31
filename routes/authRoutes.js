@@ -10,6 +10,7 @@ const {
   getAllUsers,
   updateUser,
   deleteUser,
+  updateUserPassword,
 } = require("../controllers/authController");
 
 router.route("/register").post(register);
@@ -19,5 +20,6 @@ router.route("/update/:userId").put(authentication, authorization, updateUser);
 router
   .route("/delete/:userId")
   .delete(authentication, authorization, deleteUser);
+router.route("/updateUserPassword").patch(authentication, updateUserPassword);
 
 module.exports = router;

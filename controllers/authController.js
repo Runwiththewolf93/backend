@@ -60,6 +60,14 @@ const login = async (req, res) => {
   });
 };
 
+// @desc Get all users
+// @route GET /api/v1/users
+// access Private
+const getAllUsers = async (_, res) => {
+  const users = await User.find({});
+  res.status(StatusCodes.OK).json(users);
+};
+
 // @desc Update a user
 // @route PUT /api/v1/auth/update/:userId
 // @access Private / Admin
@@ -102,12 +110,43 @@ const deleteUser = async (req, res) => {
   res.status(StatusCodes.OK).json({ msg: "User deleted successfully" });
 };
 
-// @desc Get all users
-// @route GET /api/v1/users
-// access Private
-const getAllUsers = async (_, res) => {
-  const users = await User.find({});
-  res.status(StatusCodes.OK).json(users);
+// @desc Update a user's password
+// @route PATCH /api/v1/auth/updateUserPassword
+// @access Private
+const updateUserPassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    throw new CustomError.BadRequestError("Please provide all values");
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    throw new CustomError.NotFoundError("User not found");
+  }
+
+  const isPasswordCorrect = await user.comparePassword(currentPassword);
+  if (!isPasswordCorrect) {
+    throw new CustomError.UnauthenticatedError("Invalid current password");
+  }
+
+  if (currentPassword === newPassword) {
+    throw new CustomError.BadRequestError(
+      "Current password and new password are the same"
+    );
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  res.status(StatusCodes.OK).json({ msg: "Password updated successfully" });
 };
 
-module.exports = { register, login, getAllUsers, updateUser, deleteUser };
+module.exports = {
+  register,
+  login,
+  getAllUsers,
+  updateUser,
+  deleteUser,
+  updateUserPassword,
+};

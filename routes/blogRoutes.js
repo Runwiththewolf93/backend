@@ -8,11 +8,19 @@ const {
   updateBlogPost,
   deleteBlogPost,
 } = require("../controllers/blogController");
+const upload = require("../middleware/multer");
 
 router
   .route("/")
   .get(authentication, getAllBlogPosts)
-  .post(authentication, createBlogPost);
+  .post(
+    authentication,
+    upload.fields([
+      { name: "avatar", maxCount: 1 },
+      { name: "images", maxCount: 3 },
+    ]),
+    createBlogPost
+  );
 
 router
   .route("/:id")
