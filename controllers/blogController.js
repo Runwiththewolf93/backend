@@ -2,7 +2,7 @@ const Blog = require("../models/Blog");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 const Joi = require("joi");
-const cloudinary = require("cloudinary").v2;
+const deleteImagesFromCloudinary = require("../helper/helper");
 
 // @desc Fetch all blog posts
 // @route GET /api/v1/blog
@@ -114,19 +114,7 @@ const updateBlogPost = async (req, res) => {
 
   // Replace images in Cloudinary
   const oldImages = [...blogPost.images, blogPost.avatar];
-  const regex = /\/v\d+\/(.+)\.\w{3,4}$/;
-  const deletePromises = oldImages.map(oldImage => {
-    if (oldImage.includes("cloudinary")) {
-      const publicIdMatch = oldImage.match(regex);
-      const publicId = publicIdMatch ? publicIdMatch[1] : null;
-      if (publicId) {
-        return cloudinary.uploader.destroy(publicId);
-      }
-    }
-    // If oldImage does not include "cloudinary", return a resolved Promise
-    return Promise.resolve();
-  });
-  await Promise.all(deletePromises);
+  await deleteImagesFromCloudinary(oldImages);
 
   const updatedBlogPost = await Blog.findByIdAndUpdate(
     { _id: id },
@@ -167,13 +155,8 @@ const deleteBlogPost = async (req, res) => {
   }
 
   // Delete images from Cloudinary
-  const images = blogPost.images;
-  images.forEach(async image => {
-    if (image.includes("cloudinary")) {
-      const publicId = image.substring(image.lastIndexOf("/") + 1);
-      await cloudinary.uploader.destroy(publicId);
-    }
-  });
+  const oldImages = [...blogPost.images, blogPost.avatar];
+  await deleteImagesFromCloudinary(oldImages);
 
   await Blog.findByIdAndDelete({ _id: id });
 

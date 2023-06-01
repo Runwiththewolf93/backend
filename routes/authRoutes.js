@@ -11,6 +11,8 @@ const {
   updateUser,
   deleteUser,
   updateUserPassword,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/authController");
 
 router.route("/register").post(register);
@@ -21,5 +23,7 @@ router
   .route("/delete/:userId")
   .delete(authentication, authorization, deleteUser);
 router.route("/updateUserPassword").patch(authentication, updateUserPassword);
+router.route("/forgotPassword").post(forgotPassword);
+router.route("/resetPassword/:token").post(resetPassword);
 
 module.exports = router;

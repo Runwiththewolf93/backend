@@ -2,6 +2,9 @@ const User = require("../models/User");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 const Joi = require("joi");
+const crypto = require("crypto");
+const sgMail = require("@sendgrid/mail");
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // @desc Register a new user
 // @route POST /api/v1/auth/register
@@ -157,8 +160,8 @@ const deleteUser = async (req, res) => {
 // @access Private
 const updateUserPassword = async (req, res) => {
   const bodySchema = Joi.object({
-    currentPassword: Joi.string().required(),
-    newPassword: Joi.string().required(),
+    currentPassword: Joi.string().min(6).required(),
+    newPassword: Joi.string().min(6).required(),
   });
 
   const { error, value } = bodySchema.validate(req.body);
@@ -190,6 +193,107 @@ const updateUserPassword = async (req, res) => {
   res.status(StatusCodes.OK).json({ msg: "Password updated successfully" });
 };
 
+// @desc Generate and store password reset token, send email
+// @route POST /api/v1/auth/forgotPassword
+// @access Public
+const forgotPassword = async (req, res) => {
+  const schema = Joi.object({
+    email: Joi.string().email().required(),
+  });
+
+  const { error, value } = schema.validate(req.body);
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { email } = value;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new CustomError.NotFoundError("User not found");
+  }
+
+  // Generate and set password reset token
+  user.resetPasswordToken = crypto.randomBytes(20).toString("hex");
+  user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+  await user.save();
+
+  // Send email
+  const msg = {
+    to: email,
+    from: "stevan38a@gmail.com",
+    subject: "Password Reset",
+    text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
+    Please click on the following link, or paste this into your browser to complete the process within one hour of receiving it:\n\n
+    http://localhost:3000/reset-password/${user.resetPasswordToken}\n\n
+    If you did not request this, please ignore this email and your password will remain unchanged.\n`,
+  };
+
+  try {
+    await sgMail.send(msg);
+    res.send(`An email has been sent to ${email} with further instructions.`);
+  } catch (error) {
+    res.send(error);
+    if (error.response) {
+      console.error(error.response.body);
+    }
+  }
+};
+
+// @desc Reset user password, invalidate token, send email
+// @route POST /api/v1/auth/resetPassword/:token
+// @access Private
+const resetPassword = async (req, res) => {
+  const { token } = req.params;
+
+  const schema = Joi.object({
+    password: Joi.string().min(6).required(),
+  });
+
+  const { error, value } = schema.validate(req.body);
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { password } = value;
+
+  const user = await User.findOne({
+    resetPasswordToken: token,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    throw new CustomError.NotFoundError("User not found");
+  }
+
+  // Set the new password
+  user.password = password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+
+  await user.save();
+
+  // Send confirmation email
+  const msg = {
+    to: user.email,
+    from: "stevan38a@gmail.com",
+    subject: "Your password has been changed",
+    text: `Hello ${user.name},\n\n
+    This is a confirmation that the password for your account ${user.email} has just been changed.\n`,
+  };
+
+  try {
+    await sgMail.send(msg);
+    res.send("Success! Your password has been changed.");
+  } catch (error) {
+    res.send(error);
+    if (error.response) {
+      console.error(error.response.body);
+    }
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -197,4 +301,6 @@ module.exports = {
   updateUser,
   deleteUser,
   updateUserPassword,
+  forgotPassword,
+  resetPassword,
 };
