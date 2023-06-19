@@ -179,6 +179,29 @@ const deleteAllCommentsBlogPost = async (req, res) => {
   res.status(StatusCodes.OK).json(deletedComments);
 };
 
+// @desc Fetch comments for filtered blog posts
+// @route POST /api/v1/comment/filter
+// @access Private
+const getFilteredComments = async (req, res) => {
+  const schema = Joi.object({
+    blogIds: Joi.array().items(Joi.string().length(24).hex()).required(),
+  });
+
+  const { error, value } = schema.validate(req.body);
+
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { blogIds } = value;
+
+  const comments = await Comment.find({
+    blog: { $in: blogIds },
+  }).populate("user", "name email");
+
+  res.status(StatusCodes.OK).json(comments || []);
+};
+
 module.exports = {
   getAllCommentsBlogPost,
   getAllCommentsUser,
@@ -187,4 +210,5 @@ module.exports = {
   updateCommentBlogPost,
   deleteCommentBlogPost,
   deleteAllCommentsBlogPost,
+  getFilteredComments,
 };

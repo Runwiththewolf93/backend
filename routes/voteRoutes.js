@@ -12,6 +12,7 @@ const {
   deleteBlogVoteCount,
   deleteCommentVoteCount,
   deleteAllCommentVotesForBlog,
+  getFilteredVotes,
 } = require("../controllers/voteController");
 
 router.route("/").get(authentication, getAllVotes);
@@ -29,5 +30,7 @@ router
 router
   .route("/blogId/:blogId/comments")
   .delete(authentication, blogIdExtraction, deleteAllCommentVotesForBlog);
+
+router.route("/filter").post(authentication, getFilteredVotes);
 
 module.exports = router;

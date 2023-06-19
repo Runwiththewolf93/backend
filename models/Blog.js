@@ -7,10 +7,6 @@ const BlogSchema = mongoose.Schema(
       required: [true, "Please provide a title"],
       maxlength: [100, "Title cannot be more than 100 characters"],
     },
-    date: {
-      type: Date,
-      default: Date.now,
-    },
     avatar: {
       type: String,
       required: true,

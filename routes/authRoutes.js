@@ -23,7 +23,7 @@ router
   .route("/delete/:userId")
   .delete(authentication, authorization, deleteUser);
 router.route("/updateUserPassword").patch(authentication, updateUserPassword);
-router.route("/forgotPassword").post(forgotPassword);
-router.route("/resetPassword/:token").post(resetPassword);
+router.route("/forgotPassword").patch(forgotPassword);
+router.route("/resetPassword/:token").patch(resetPassword);
 
 module.exports = router;

@@ -194,7 +194,7 @@ const updateUserPassword = async (req, res) => {
 };
 
 // @desc Generate and store password reset token, send email
-// @route POST /api/v1/auth/forgotPassword
+// @route PATCH /api/v1/auth/forgotPassword
 // @access Public
 const forgotPassword = async (req, res) => {
   const schema = Joi.object({
@@ -234,7 +234,9 @@ const forgotPassword = async (req, res) => {
     await sgMail.send(msg);
     res.send(`An email has been sent to ${email} with further instructions.`);
   } catch (error) {
-    res.send(error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send("An error occurred while sending the email.");
     if (error.response) {
       console.error(error.response.body);
     }
@@ -242,7 +244,7 @@ const forgotPassword = async (req, res) => {
 };
 
 // @desc Reset user password, invalidate token, send email
-// @route POST /api/v1/auth/resetPassword/:token
+// @route PATCH /api/v1/auth/resetPassword/:token
 // @access Private
 const resetPassword = async (req, res) => {
   const { token } = req.params;
@@ -267,12 +269,27 @@ const resetPassword = async (req, res) => {
     throw new CustomError.NotFoundError("User not found");
   }
 
+  const isSamePassword = await user.comparePassword(password);
+  if (isSamePassword) {
+    throw new CustomError.BadRequestError(
+      "New password must be different from the old one"
+    );
+  }
+
+  if (user.resetPasswordToken !== token) {
+    throw new CustomError.BadRequestError("Token has been tampered with");
+  }
+
   // Set the new password
   user.password = password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpires = undefined;
 
+  // Save updated user to db
   await user.save();
+
+  // Generate token
+  const userToken = user.createJWT();
 
   // Send confirmation email
   const msg = {
@@ -285,9 +302,20 @@ const resetPassword = async (req, res) => {
 
   try {
     await sgMail.send(msg);
-    res.send("Success! Your password has been changed.");
+    res.send({
+      msg: "Success! Your password has been changed.",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        token: userToken,
+      },
+    });
   } catch (error) {
-    res.send(error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send("An error occurred while sending the confirmation email.");
     if (error.response) {
       console.error(error.response.body);
     }

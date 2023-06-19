@@ -14,6 +14,7 @@ const {
   updateCommentBlogPost,
   deleteCommentBlogPost,
   deleteAllCommentsBlogPost,
+  getFilteredComments,
 } = require("../controllers/commentController");
 
 router.route("/").get(authentication, getAllComments);
@@ -40,5 +41,7 @@ router
     commentIdExtraction,
     deleteCommentBlogPost
   );
+
+router.route("/filter").post(authentication, getFilteredComments);
 
 module.exports = router;

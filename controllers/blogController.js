@@ -8,11 +8,65 @@ const deleteImagesFromCloudinary = require("../helper/helper");
 // @route GET /api/v1/blog
 // @access Private
 const getAllBlogPosts = async (req, res) => {
-  const blogPosts = await Blog.find({})
+  const blogPosts = await Blog.find()
     .populate("user", "name email")
     .sort("createdAt");
 
+  if (!blogPosts) {
+    throw new CustomError.NotFoundError("No blog posts found");
+  }
+
   res.status(StatusCodes.OK).json(blogPosts);
+};
+
+// @desc Fetch filtered blog posts
+// @route GET /api/v1/blog/filtered
+// @access Private
+const getFilteredBlogPosts = async (req, res) => {
+  const sort = req.query.sort || "createdAt";
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+  const skip = (page - 1) * limit;
+  const order = req.query.order || "asc"; // change to desc later
+
+  const sortOrder = order === "desc" ? -1 : 1;
+
+  const blogPosts = await Blog.aggregate([
+    {
+      $lookup: {
+        from: "users",
+        let: { userId: "$user" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$_id", "$$userId"] } } },
+          { $project: { name: 1, email: 1 } },
+        ],
+        as: "user",
+      },
+    },
+    {
+      $unwind: "$user",
+    },
+    {
+      $addFields: {
+        totalVotes: { $ifNull: ["$totalVotes", 0] },
+      },
+    },
+    {
+      $sort: { [sort]: sortOrder },
+    },
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limit,
+    },
+  ]);
+
+  const totalPosts = await Blog.countDocuments();
+  const hasMore = skip + limit < totalPosts;
+  console.log(blogPosts);
+
+  res.status(StatusCodes.OK).json({ posts: blogPosts, hasMore });
 };
 
 // @desc Create new blog post
@@ -31,22 +85,29 @@ const createBlogPost = async (req, res) => {
     throw new CustomError.BadRequestError(error.details[0].message);
   }
 
-  const { title, avatar: avatarUrl, content, images: imagesUrl } = value;
+  const { title, avatar, content, images } = value;
   const user = req.user.id;
-
-  const avatar =
-    req.files && req.files["avatar"] && req.files["avatar"][0]
-      ? req.files["avatar"][0].path
-      : avatarUrl;
-
-  const images =
-    req.files && req.files["images"]
-      ? req.files["images"].map(image => image.path)
-      : imagesUrl;
 
   const blogPost = await Blog.create({ user, title, avatar, content, images });
 
   res.status(StatusCodes.CREATED).json(blogPost);
+};
+
+// @desc Upload blog post images
+// @route POST /api/v1/blog/images
+// @access Private
+const uploadBlogImages = async (req, res) => {
+  // Using multer middleware
+  const avatar =
+    req.files && req.files["avatar"] ? req.files["avatar"][0].path : null;
+  const images =
+    req.files && req.files["images"]
+      ? req.files["images"].map(image => image.path)
+      : null;
+
+  res
+    .status(StatusCodes.OK)
+    .json({ message: "Images uploaded successfully.", avatar, images });
 };
 
 // @desc Get single blog post
@@ -102,23 +163,13 @@ const updateBlogPost = async (req, res) => {
     );
   }
 
-  const avatar =
-    req.files && req.files["avatar"] && req.files["avatar"][0]
-      ? req.files["avatar"][0].path
-      : value.avatar;
-
-  const images =
-    req.files && req.files["images"]
-      ? req.files["images"].map(image => image.path)
-      : value.images;
-
   // Replace images in Cloudinary
   const oldImages = [...blogPost.images, blogPost.avatar];
   await deleteImagesFromCloudinary(oldImages);
 
   const updatedBlogPost = await Blog.findByIdAndUpdate(
     { _id: id },
-    { $set: { ...value, avatar, images } },
+    { $set: value },
     {
       new: true,
       runValidators: true,
@@ -127,6 +178,7 @@ const updateBlogPost = async (req, res) => {
 
   res.status(StatusCodes.OK).json(updatedBlogPost);
 };
+// ask how this exactly works.
 
 // @desc Delete existing blog post
 // @route DELETE /api/v1/blog/:id
@@ -167,8 +219,10 @@ const deleteBlogPost = async (req, res) => {
 
 module.exports = {
   getAllBlogPosts,
-  createBlogPost,
+  getFilteredBlogPosts,
   getSingleBlogPost,
+  createBlogPost,
+  uploadBlogImages,
   updateBlogPost,
   deleteBlogPost,
 };

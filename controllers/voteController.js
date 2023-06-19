@@ -3,6 +3,7 @@ const Blog = require("../models/Blog");
 const Comment = require("../models/Comment");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
+const Joi = require("joi");
 
 //@desc Get all votes
 //@route GET /api/v1/vote
@@ -145,8 +146,8 @@ const deleteBlogVoteCount = async (req, res) => {
 
   if (!existingVote) {
     return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Vote does not exist" });
+      .status(StatusCodes.OK)
+      .json({ msg: "No vote to delete", totalVotes: blogPost.totalVotes });
   } else {
     const oldVote = existingVote.vote;
 
@@ -186,7 +187,8 @@ const deleteCommentVoteCount = async (req, res) => {
   const existingVote = await Vote.findOne({ user: userId, post: commentId });
 
   if (!existingVote) {
-    res.status(StatusCodes.BAD_REQUEST).json({ msg: "Vote does not exist" });
+    // Vote doesn't exist, so we return a success status.
+    return res.status(StatusCodes.OK).json({ msg: "No vote to delete" });
   } else {
     const oldVote = existingVote.vote;
 
@@ -227,6 +229,29 @@ const deleteAllCommentVotesForBlog = async (req, res) => {
   res.status(StatusCodes.OK).json({ msg: "All comment votes deleted" });
 };
 
+// @desc Fetch votes for filtered blog posts
+// @route POST /api/v1/vote/filter
+// @access Private
+const getFilteredVotes = async (req, res) => {
+  const schema = Joi.object({
+    postIds: Joi.array().items(Joi.string().length(24).hex()).required(),
+  });
+
+  const { error, value } = schema.validate(req.body);
+
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { postIds } = value;
+
+  const votes = await Vote.find({
+    post: { $in: postIds },
+  }).populate("user", "name email");
+
+  res.status(StatusCodes.OK).json(votes || []);
+};
+
 module.exports = {
   getAllVotes,
   updateBlogVoteCount,
@@ -234,4 +259,5 @@ module.exports = {
   deleteBlogVoteCount,
   deleteCommentVoteCount,
   deleteAllCommentVotesForBlog,
+  getFilteredVotes,
 };
