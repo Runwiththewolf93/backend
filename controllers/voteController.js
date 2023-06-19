@@ -247,7 +247,7 @@ const getFilteredVotes = async (req, res) => {
 
   const votes = await Vote.find({
     post: { $in: postIds },
-  }).populate("user", "name email");
+  });
 
   res.status(StatusCodes.OK).json(votes || []);
 };
