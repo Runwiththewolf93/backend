@@ -199,7 +199,23 @@ const getFilteredComments = async (req, res) => {
     blog: { $in: blogIds },
   }).populate("user", "name email");
 
-  res.status(StatusCodes.OK).json(comments || []);
+  // Count comments per blog post
+  const commentCounts = {};
+
+  // Filter comments to limit to 5 per blog post
+  const limitedComments = comments.filter(comment => {
+    const blogId = comment.blog.toString();
+    if (!commentCounts[blogId]) {
+      commentCounts[blogId] = 0;
+    }
+    if (commentCounts[blogId] < 5) {
+      commentCounts[blogId]++;
+      return true;
+    }
+    return false;
+  });
+
+  res.status(StatusCodes.OK).json(limitedComments || []);
 };
 
 module.exports = {
