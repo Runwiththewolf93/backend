@@ -3,6 +3,7 @@ const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 const Joi = require("joi");
 const deleteImagesFromCloudinary = require("../helper/helper");
+const mongoose = require("mongoose");
 
 // @desc Fetch all blog posts
 // @route GET /api/v1/blog
@@ -12,7 +13,7 @@ const getAllBlogPosts = async (req, res) => {
     .populate("user", "name email")
     .sort("createdAt");
 
-  if (!blogPosts) {
+  if (blogPosts.length === 0) {
     throw new CustomError.NotFoundError("No blog posts found");
   }
 
@@ -20,51 +21,39 @@ const getAllBlogPosts = async (req, res) => {
 };
 
 // @desc Fetch filtered blog posts
-// @route GET /api/v1/blog/filtered
+// @route POST /api/v1/blog/filtered
 // @access Private
 const getFilteredBlogPosts = async (req, res) => {
-  const sort = req.query.sort || "createdAt";
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 5;
-  const skip = (page - 1) * limit;
-  const order = req.query.order || "asc"; // change to desc later
+  const schema = Joi.object({
+    blogIds: Joi.array().items(Joi.string().length(24).hex()),
+    page: Joi.number().integer().min(1).required(),
+    limit: Joi.number().integer().min(1).max(5).required(),
+    sort: Joi.string().valid("createdAt", "updatedAt", "totalVotes").required(),
+    order: Joi.string().valid("asc", "desc").required(),
+  });
+
+  const { error, value } = schema.validate(req.body);
+
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { blogIds, page, limit, sort, order } = value;
 
   const sortOrder = order === "desc" ? -1 : 1;
 
-  const blogPosts = await Blog.aggregate([
-    {
-      $lookup: {
-        from: "users",
-        let: { userId: "$user" },
-        pipeline: [
-          { $match: { $expr: { $eq: ["$_id", "$$userId"] } } },
-          { $project: { name: 1, email: 1 } },
-        ],
-        as: "user",
-      },
-    },
-    {
-      $unwind: "$user",
-    },
-    {
-      $addFields: {
-        totalVotes: { $ifNull: ["$totalVotes", 0] },
-      },
-    },
-    {
-      $sort: { [sort]: sortOrder },
-    },
-    {
-      $skip: skip,
-    },
-    {
-      $limit: limit,
-    },
-  ]);
+  // Exclude the IDs of the blog posts that have already been loaded
+  const excludedIds = blogIds ? [...blogIds] : [];
+
+  // Fetch the blog posts with the remaining IDs, limiting the number of blog posts to 'limit'
+  const blogPosts = await Blog.find({ _id: { $nin: excludedIds } })
+    .populate("user", "name email")
+    .sort({ [sort]: sortOrder })
+    .limit(limit);
 
   const totalPosts = await Blog.countDocuments();
-  const hasMore = skip + limit < totalPosts;
-  console.log(blogPosts);
+  const hasMore = (page - 1) * limit + blogPosts.length < totalPosts;
+  console.log(blogPosts.map(b => b._id));
 
   res.status(StatusCodes.OK).json({ posts: blogPosts, hasMore });
 };

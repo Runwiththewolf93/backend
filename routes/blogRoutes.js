@@ -17,7 +17,7 @@ router
   .get(authentication, getAllBlogPosts)
   .post(authentication, createBlogPost);
 
-router.route("/filtered").get(authentication, getFilteredBlogPosts);
+router.route("/filtered").post(authentication, getFilteredBlogPosts);
 
 router
   .route("/:id")

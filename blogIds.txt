@@ -1,0 +1,7 @@
+blog post 4 3 votes missing
+blog post 10 0 votes missing
+blog post 12 0 votes missing
+Let's add whatever post 0 votes missing
+
+totalVotes asc
+    "blogIds": ["643405c455723282512dc1b1", "64774060045c4f08f20147b2", "645a2ed46273ccc2ce33a8f1", "645a278c6273ccc2ce33a87f", "645a24116273ccc2ce33a84a", "645a30836273ccc2ce33a92f", "645a2f8f6273ccc2ce33a901", "6480b9b216d52e2411b1c7b3", "645a31966273ccc2ce33a93f", "6437d3fd42b3063fb2664e63", "648881e8882cb2ec8cc7948a", "6495a60db26ac3dfa9001c37", "64340a8555723282512dc1b5", "6437d32542b3063fb2664e5a", "64340a2c55723282512dc1b3"]

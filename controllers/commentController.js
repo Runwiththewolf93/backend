@@ -2,6 +2,7 @@ const Comment = require("../models/Comment");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 const Joi = require("joi");
+const mongoose = require("mongoose");
 
 // @desc Get all comments for a single blog post
 // @route GET /api/v1/comment/blogId/:blogId
@@ -22,7 +23,8 @@ const getAllCommentsBlogPost = async (req, res) => {
     "user",
     "name email"
   );
-  if (!comments) {
+
+  if (comments.length === 0) {
     throw new CustomError.NotFoundError(
       `No comments found for blog post with id : ${blogId}`
     );
@@ -50,7 +52,8 @@ const getAllCommentsUser = async (req, res) => {
     "blog",
     "title"
   );
-  if (!comments) {
+
+  if (comments.length === 0) {
     throw new CustomError.NotFoundError(
       `No comments found for user with id : ${user._id}`
     );
@@ -67,7 +70,7 @@ const getAllComments = async (_, res) => {
     .populate("user", "name email")
     .sort("createdAt");
 
-  if (!comments) {
+  if (comments.length === 0) {
     throw new CustomError.NotFoundError("No comments found");
   }
 
@@ -96,6 +99,7 @@ const createCommentBlogPost = async (req, res) => {
     user: userId,
     blog: blogId,
   });
+
   if (!newComment) {
     throw new CustomError.BadRequestError(
       `Comment could not be created for blog post with id : ${blogId}`
@@ -218,6 +222,48 @@ const getFilteredComments = async (req, res) => {
   res.status(StatusCodes.OK).json(limitedComments || []);
 };
 
+// @desc Fetch additional comments for a blog post
+// @route POST /api/v1/comment/more
+// @access Private
+const getMoreComments = async (req, res) => {
+  const schema = Joi.object({
+    blogId: Joi.string().length(24).hex().required(),
+    commentIds: Joi.array().items(Joi.string().length(24).hex()).required(),
+    limit: Joi.number().integer().min(1).max(5).required(),
+    sort: Joi.string().valid("createdAt", "updatedAt", "totalVotes").required(),
+    order: Joi.string().valid("asc", "desc").required(),
+  });
+
+  const { error, value } = schema.validate(req.body);
+
+  if (error) {
+    throw new CustomError.BadRequestError(error.details[0].message);
+  }
+
+  const { blogId, commentIds, limit, sort, order } = value;
+
+  const sortOrder = order === "desc" ? -1 : 1;
+
+  console.log(`limit: ${limit}, sort: ${sort}, order: ${order}`);
+
+  // Exclude the IDs of the comments that have already been loaded
+  const excludedIds = [...commentIds];
+  console.log("excludedIds", excludedIds);
+
+  // Fetch the comments with the remaining IDs, limiting the number of comments to `limit`
+  const comments = await Comment.find({
+    blog: blogId,
+    _id: { $nin: excludedIds },
+  })
+    .sort({ [sort]: sortOrder })
+    .limit(limit)
+    .populate("user", "name email");
+
+  console.log(`comments: ${comments.map(i => i._id)}`);
+
+  res.status(StatusCodes.OK).json(comments || []);
+};
+
 module.exports = {
   getAllCommentsBlogPost,
   getAllCommentsUser,
@@ -227,4 +273,5 @@ module.exports = {
   deleteCommentBlogPost,
   deleteAllCommentsBlogPost,
   getFilteredComments,
+  getMoreComments,
 };

@@ -11,6 +11,10 @@ const Joi = require("joi");
 const getAllVotes = async (req, res) => {
   const votes = await Vote.find({});
 
+  if (votes.length === 0) {
+    throw new CustomError.NotFoundError("No votes found");
+  }
+
   res.status(StatusCodes.OK).json(votes);
 };
 
