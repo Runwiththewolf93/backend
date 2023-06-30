@@ -26,7 +26,6 @@ const getAllBlogPosts = async (req, res) => {
 const getFilteredBlogPosts = async (req, res) => {
   const schema = Joi.object({
     blogIds: Joi.array().items(Joi.string().length(24).hex()),
-    page: Joi.number().integer().min(1).required(),
     limit: Joi.number().integer().min(1).max(5).required(),
     sort: Joi.string().valid("createdAt", "updatedAt", "totalVotes").required(),
     order: Joi.string().valid("asc", "desc").required(),
@@ -38,7 +37,7 @@ const getFilteredBlogPosts = async (req, res) => {
     throw new CustomError.BadRequestError(error.details[0].message);
   }
 
-  const { blogIds, page, limit, sort, order } = value;
+  const { blogIds, limit, sort, order } = value;
 
   const sortOrder = order === "desc" ? -1 : 1;
 
@@ -51,11 +50,9 @@ const getFilteredBlogPosts = async (req, res) => {
     .sort({ [sort]: sortOrder })
     .limit(limit);
 
-  const totalPosts = await Blog.countDocuments();
-  const hasMore = (page - 1) * limit + blogPosts.length < totalPosts;
   console.log(blogPosts.map(b => b._id));
 
-  res.status(StatusCodes.OK).json({ posts: blogPosts, hasMore });
+  res.status(StatusCodes.OK).json(blogPosts || []);
 };
 
 // @desc Create new blog post
