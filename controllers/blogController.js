@@ -3,7 +3,6 @@ const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 const Joi = require("joi");
 const deleteImagesFromCloudinary = require("../helper/helper");
-const mongoose = require("mongoose");
 
 // @desc Fetch all blog posts
 // @route GET /api/v1/blog
