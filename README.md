@@ -19,6 +19,7 @@ This project is complete. Tests remain to be conducted on some functions, but th
 ## Project Screen Shot(s)  
 
 **Before login**
+
 ![Screenshot](./public/screenshots/Backend-1.png)
 
 **Login**
