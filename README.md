@@ -18,15 +18,17 @@ This project is complete. Tests remain to be conducted on some functions, but th
 
 ## Project Screen Shot(s)  
 
-**Before login**
+**Routes 1**
 
 ![Screenshot](./public/screenshots/Backend-1.png)
 
-**Login**
-![Screenshot](./public/assets/Frontend-2.png)
+**Routes 2**
 
-**Logged in**
-![Screenshot](./public/assets/Frontend-3.png)
+![Screenshot](./public/screenshots/Backend-1.png)
+
+**Database Diagram**
+
+![Screenshot](./public/screenshots/database-diagram.svg)
 
 **Add blog post modal**
 ![Screenshot](./public/assets/Frontend-4.png)
